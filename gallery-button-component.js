@@ -16,6 +16,9 @@ class GalleryButtonComponent extends HTMLElement {
         context.fillRect(0,0,size,size)
         this.img.src = canvas.toDataURL()
     }
+    update() {
+        
+    }
     connectedCallback() {
         var loaded = 0
         this.images = this.imageSrcs.map((imageSrc)=>{
@@ -88,6 +91,23 @@ class GalleryContainer {
     }
     update() {
         this.x -= this.speed
+    }
+}
+class AnimationHandler {
+    constructor(component) {
+        this.i = 0
+        this.component = component
+    }
+    start() {
+        const interval = setInterval(()=>{
+            this.i ++
+            this.component.update()
+            if(this.i == 6) {
+                this.i = 0
+                clearInterval(interval)
+            }
+        },50)
+
     }
 }
 customElements.define('gallery-button-component',GalleryButtonComponent)
