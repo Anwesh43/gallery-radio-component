@@ -6,6 +6,13 @@ class GalleryButtonComponent extends HTMLElement {
         const shadow = this.attachShadow({mode:'open'})
         this.img = document.createElement('img')
         shadow.appendChild(this.img)
+        this.btns = []
+        var w = size/((2*this.imageSrcs.length+1)),x = 3*w/2
+        this.imageSrcs.forEach((src,index)=>{
+            this.btns.push(new GalleryButon(x,size-2*w,w/2))
+            x += 2*w
+        })
+        this.animationHandler = new AnimationHandler(this)
     }
     render() {
         const canvas = document.createElement('canvas')
@@ -14,10 +21,20 @@ class GalleryButtonComponent extends HTMLElement {
         const context = canvas.getContext('2d')
         context.fillStyle = '#E0E0E0'
         context.fillRect(0,0,size,size)
+        this.btns.forEach((btn)=>{
+            btn.draw(context)
+        })
+        this.galleryContainer.draw(context)
         this.img.src = canvas.toDataURL()
     }
     update() {
-        
+        this.galleryContainer.update()
+        if(this.prevBtn) {
+            this.prevBtn.update()
+        }
+        if(this.currBtn) {
+            this.currBtn.update()
+        }
     }
     connectedCallback() {
         var loaded = 0
@@ -28,11 +45,26 @@ class GalleryButtonComponent extends HTMLElement {
                 loaded ++
                 if(loaded == this.imageSrcs.length) {
                     console.log("all images are loaded")
+                    this.galleryContainer = new GalleryContainer(this.images)
                     this.render()
                 }
             }
             return image
         })
+        this.img.onmousedown = (event) => {
+          const x = event.offsetX, y = event.offsetY
+          this.btns.forEach((btn)=>{
+              if(btn.handleTap(x,y) == true) {
+                  if(this.currBtn) {
+                      this.prevBtn = this.currBtn
+                      this.prevBtn.setDir(-1)
+                  }
+                  this.currBtn = btn
+                  this.currBtn.setDir(1)
+                  this.animationHandler.start()
+              }
+          })
+        }
     }
 }
 class GalleryButon  {
@@ -42,6 +74,7 @@ class GalleryButon  {
         this.r = r
         this.scale = 0
         this.dir = 0
+        console.log(this.y)
     }
     draw(context) {
         context.fillStyle = 'blue'
@@ -50,28 +83,43 @@ class GalleryButon  {
         context.beginPath()
         context.save()
         context.translate(this.x,this.y)
-        context.arc(0,0,r,0,2*Math.PI)
+        context.arc(0,0,this.r,0,2*Math.PI)
         context.stroke()
         context.save()
         context.scale(this.scale,this.scale)
-        context.arc(0,0,r,0,2*Math.PI)
+        context.arc(0,0,this.r,0,2*Math.PI)
         context.fill()
         context.restore()
         context.restore()
     }
     update() {
         this.scale += this.dir*0.2
+        console.log(this.scale)
         if(this.scale > 1) {
+            this.dir = 0
+            this.scale = 1
+        }
+        else if(this.scale < 0) {
             this.dir = 0
             this.scale = 0
         }
     }
+    handleTap(x,y) {
+        console.log(`${x} and ${y}, ${this.x} and ${this.y}`)
+        return x>=this.x-this.r && x<=this.x+this.r && y>=this.y-this.r && y<=this.y+this.r
+    }
     setDir(dir) {
         this.dir = dir
+        if(this.dir == 1) {
+            this.scale = 0
+        }
+        else if(this.dir == -1) {
+            this.scale = 1
+        }
     }
 }
 class GalleryContainer {
-    constructor(image) {
+    constructor(images) {
         this.x = 0
         this.currIndex = 0
         this.speed = 0
@@ -85,7 +133,7 @@ class GalleryContainer {
         this.images.forEach((image,index)=>{
             context.save()
             context.translate(this.x,0)
-            context.drawImage(image,0,0,0.8*size,0.8*size*(image.height/image.width))
+            context.drawImage(image,0.1*size,0.1*size,0.8*size,0.8*size*(image.height/image.width))
             context.restore()
         })
     }
@@ -100,6 +148,7 @@ class AnimationHandler {
     }
     start() {
         const interval = setInterval(()=>{
+            this.component.render()
             this.i ++
             this.component.update()
             if(this.i == 6) {
