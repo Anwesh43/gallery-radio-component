@@ -67,4 +67,27 @@ class GalleryButon  {
         this.dir = dir
     }
 }
+class GalleryContainer {
+    constructor(image) {
+        this.x = 0
+        this.currIndex = 0
+        this.speed = 0
+        this.images = images
+    }
+    setSpeed(index) {
+        const diff = (index-this.currIndex)
+        this.speed = (diff*0.8*size)/6
+    }
+    draw(context) {
+        this.images.forEach((image,index)=>{
+            context.save()
+            context.translate(this.x,0)
+            context.drawImage(image,0,0,0.8*size,0.8*size*(image.height/image.width))
+            context.restore()
+        })
+    }
+    update() {
+        this.x -= this.speed
+    }
+}
 customElements.define('gallery-button-component',GalleryButtonComponent)
