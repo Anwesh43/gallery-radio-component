@@ -36,6 +36,9 @@ class GalleryButtonComponent extends HTMLElement {
             this.currBtn.update()
         }
     }
+    resetX() {
+        this.galleryContainer.resetX()
+    }
     connectedCallback() {
         var loaded = 0
         this.images = this.imageSrcs.map((imageSrc)=>{
@@ -53,7 +56,7 @@ class GalleryButtonComponent extends HTMLElement {
         })
         this.img.onmousedown = (event) => {
           const x = event.offsetX, y = event.offsetY
-          this.btns.forEach((btn)=>{
+          this.btns.forEach((btn,index)=>{
               if(btn.handleTap(x,y) == true) {
                   if(this.currBtn) {
                       this.prevBtn = this.currBtn
@@ -61,6 +64,7 @@ class GalleryButtonComponent extends HTMLElement {
                   }
                   this.currBtn = btn
                   this.currBtn.setDir(1)
+                  this.galleryContainer.setSpeed(index)
                   this.animationHandler.start()
               }
           })
@@ -74,7 +78,7 @@ class GalleryButon  {
         this.r = r
         this.scale = 0
         this.dir = 0
-        console.log(this.y)
+        //console.log(this.y)
     }
     draw(context) {
         context.fillStyle = 'blue'
@@ -86,15 +90,17 @@ class GalleryButon  {
         context.arc(0,0,this.r,0,2*Math.PI)
         context.stroke()
         context.save()
+        context.translate(0,0)
         context.scale(this.scale,this.scale)
+        context.beginPath()
         context.arc(0,0,this.r,0,2*Math.PI)
         context.fill()
         context.restore()
         context.restore()
     }
     update() {
-        this.scale += this.dir*0.2
-        console.log(this.scale)
+        this.scale += this.dir*0.1
+        //console.log(this.scale)
         if(this.scale > 1) {
             this.dir = 0
             this.scale = 1
@@ -105,7 +111,7 @@ class GalleryButon  {
         }
     }
     handleTap(x,y) {
-        console.log(`${x} and ${y}, ${this.x} and ${this.y}`)
+        //console.log(`${x} and ${y}, ${this.x} and ${this.y}`)
         return x>=this.x-this.r && x<=this.x+this.r && y>=this.y-this.r && y<=this.y+this.r
     }
     setDir(dir) {
@@ -127,18 +133,26 @@ class GalleryContainer {
     }
     setSpeed(index) {
         const diff = (index-this.currIndex)
-        this.speed = (diff*0.8*size)/6
+        this.speed = (diff*size)/11
+        this.currIndex = index
+    }
+    resetX() {
+        this.x = -this.currIndex*size
     }
     draw(context) {
+      context.save()
+      context.translate(this.x,0)
         this.images.forEach((image,index)=>{
             context.save()
-            context.translate(this.x,0)
+            context.translate(size*index,0)
             context.drawImage(image,0.1*size,0.1*size,0.8*size,0.8*size*(image.height/image.width))
             context.restore()
         })
+        context.restore()
     }
     update() {
         this.x -= this.speed
+        //console.log(this.x)
     }
 }
 class AnimationHandler {
@@ -149,13 +163,17 @@ class AnimationHandler {
     start() {
         const interval = setInterval(()=>{
             this.component.render()
-            this.i ++
+            this.i++
+            //console.log(this.i)
             this.component.update()
-            if(this.i == 6) {
+            if(this.i == 11) {
+                this.component.resetX()
                 this.i = 0
+                this.component.render()
                 clearInterval(interval)
+
             }
-        },50)
+        },20)
 
     }
 }
