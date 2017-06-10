@@ -32,4 +32,39 @@ class GalleryButtonComponent extends HTMLElement {
         })
     }
 }
+class GalleryButon  {
+    constructor(x,y,r) {
+        this.x = x
+        this.y = y
+        this.r = r
+        this.scale = 0
+        this.dir = 0
+    }
+    draw(context) {
+        context.fillStyle = 'blue'
+        context.strokeStyle = 'blue'
+        context.lineWidth = this.r/8
+        context.beginPath()
+        context.save()
+        context.translate(this.x,this.y)
+        context.arc(0,0,r,0,2*Math.PI)
+        context.stroke()
+        context.save()
+        context.scale(this.scale,this.scale)
+        context.arc(0,0,r,0,2*Math.PI)
+        context.fill()
+        context.restore()
+        context.restore()
+    }
+    update() {
+        this.scale += this.dir*0.2
+        if(this.scale > 1) {
+            this.dir = 0
+            this.scale = 0
+        }
+    }
+    setDir(dir) {
+        this.dir = dir
+    }
+}
 customElements.define('gallery-button-component',GalleryButtonComponent)
